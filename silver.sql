@@ -135,3 +135,53 @@ SELECT COUNT(*) FROM silver.fact_sessions;
 
 --
 SELECT COUNT(*) FROM silver.fact_sessions WHERE processed_at > now() - INTERVAL 2 MINUTE;
+
+
+-- Проверка данных на аномалии
+
+--Completeness: % заполненности user_id, utm_source, product_id за вчера
+
+SELECT 
+	 ROUND(countIf(user_id IS NULL) / COUNT () * 100.0, 2) as check_users,
+	 ROUND(countIf(utm_source IS NULL) / COUNT () * 100.0, 2) as check_utm_sources,
+	 ROUND(countIf(product_id  IS NULL) / COUNT () * 100.0, 2) as check_products
+FROM bronze.raw_app_events 
+WHERE dateDiff('day', event_timestamp, today()) = 1;
+
+-- Timeliness: разница в часах между временем события и временем загрузки по дням за последнюю неделю
+
+SELECT 
+	 
+	toDate(event_timestamp) AS day,
+	ROUND(AVG(dateDiff('hour', event_timestamp, loaded_at)), 2)  AS avg_diff_hours,
+    MIN(dateDiff('hour', event_timestamp, loaded_at)) AS min_diff_hours,
+    MAX(dateDiff('hour', event_timestamp, loaded_at)) AS max_diff_hours
+FROM bronze.raw_app_events 
+WHERE dateDiff('day', event_timestamp, today()) <= 7
+GROUP BY toDate(event_timestamp);
+
+
+-- Anomaly : сравни количество событий каждого дня с 7-дневной скользящей средней, найди дни где отклонение > 30%
+
+WITH avg_events AS  (
+	SELECT 
+		toDate(event_timestamp) AS day, 
+		count() AS count_events
+	FROM bronze.raw_app_events 
+	WHERE event_timestamp >= now() - INTERVAL 14 DAY 
+	GROUP BY toDate(event_timestamp)
+), ma_7 AS (
+	SELECT
+	    day, count_events,
+	    round(avg(count_events) OVER (
+	        ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+	    ), 0) AS ma7,
+	    round(count_events / avg(count_events) OVER (
+	        ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+	    ) - 1, 2) AS deviation
+	FROM avg_events)
+SELECT * FROM ma_7
+WHERE abs(deviation) > 0.3
+ORDER BY abs(deviation) DESC;
+ 
+ 
