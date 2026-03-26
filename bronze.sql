@@ -4,7 +4,6 @@ SELECT version();
 
 --Создание бд 
 CREATE DATABASE IF NOT EXISTS bronze;
-CREATE DATABASE IF NOT EXISTS silver;
 CREATE DATABASE IF NOT EXISTS  gold;
 
 --Создание таблиц
