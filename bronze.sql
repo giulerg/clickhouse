@@ -4,7 +4,7 @@ SELECT version();
 
 --Создание бд 
 CREATE DATABASE IF NOT EXISTS bronze;
-CREATE DATABASE IF NOT EXISTS  gold;
+
 
 --Создание таблиц
 CREATE TABLE IF NOT EXISTS bronze.raw_app_events (
