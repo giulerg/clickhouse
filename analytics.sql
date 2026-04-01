@@ -1,4 +1,5 @@
 -- DAU / WAU / MAU и Stickiness
+
 WITH dau_cte AS (
     SELECT
         s.session_date AS dt,
@@ -10,13 +11,13 @@ WITH dau_cte AS (
     WHERE  s.session_date    >= toStartOfMonth(addMonths(today(), - 1))
             AND s.session_date < toStartOfMonth(today())
     GROUP BY s.session_date
-),mau_CTE AS (
+), mau_CTE AS (
     SELECT
         uniq(s.user_id) AS mau
     FROM silver.fact_sessions s
     WHERE  s.session_date    >= toStartOfMonth(addMonths(today(), - 1))
             AND s.session_date < toStartOfMonth(today())
-)
+)   
 SELECT
     dt,
     dau,
