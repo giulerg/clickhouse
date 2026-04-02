@@ -29,7 +29,7 @@ SELECT
 FROM dau_cte
 LEFT JOIN mau_CTE ON 1=1;
 
-select * from bronze.raw_orders
+
 
 -- когортный анализ удержания
 WITH cohort_cte AS (
@@ -59,4 +59,4 @@ SELECT
 
 FROM all_orders_cte a
 JOIN cohort_cte c  ON a.user_id = c.user_id;
-WHERE month_number <=12
+WHERE month_number <=12;
